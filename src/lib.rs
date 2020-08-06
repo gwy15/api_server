@@ -12,6 +12,10 @@ pub mod schema;
 
 pub mod errors;
 pub use errors::{Error, Result};
+
+mod config;
+pub use crate::config::Config;
+
 pub mod routes;
 
 pub mod account;

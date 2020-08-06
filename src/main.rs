@@ -7,8 +7,12 @@ extern crate rocket;
 extern crate diesel_migrations;
 embed_migrations!();
 
-fn main() {
+use gwy15::Config;
+
+fn main() -> Result<(), Box<dyn std::error::Error>> {
     dotenv::dotenv().ok();
+
+    let config = Config::new()?;
 
     // gwy15::init_logger();
 
@@ -20,6 +24,7 @@ fn main() {
 
     // build rocket
     let rocket = rocket::ignite()
+        .manage(config)
         .attach(gwy15::PgConn::fairing())
         .mount("/hello", routes)
         .register(catchers);
@@ -33,5 +38,8 @@ fn main() {
     log::info!("Database migration finished.");
 
     // launch rocket
-    rocket.launch();
+    let e = rocket.launch();
+
+    log::error!("Something went wrong: {}", e);
+    Err(e)?
 }

@@ -53,7 +53,7 @@ mod test {
     #[test]
     fn test_jwt() {
         let now = Utc::now().timestamp();
-        let jwt = JWT::new(1, 10);
+        let jwt = JWT::new(1, 600);
         assert!((jwt.iat - now).abs() <= 1);
 
         // encode

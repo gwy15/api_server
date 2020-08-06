@@ -1,3 +1,4 @@
+use config::ConfigError;
 use diesel::result::Error as DError;
 use jsonwebtoken::errors::Error as JWTError;
 
@@ -10,12 +11,18 @@ pub struct ErrorResponse<D> {
 
 #[derive(Error, Debug)]
 pub enum Error {
+    #[error("Error loading config file: {}", .0)]
+    Config(#[from] ConfigError),
+
     /// No Authorization header
     #[error("No login token found in request.")]
     NoLoginToken,
 
     #[error("Bad token: {}", .0)]
     BadLoginToken(#[from] JWTError),
+
+    #[error("User not found")]
+    UserNotFound,
 
     #[error("Database error: {}", .0)]
     Database(#[from] DError),

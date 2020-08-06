@@ -1,9 +1,11 @@
-use crate::account::jwt::JWT;
-use crate::{Error, PgConn};
+use crate::{account::JWT, Config, Error, PgConn};
 use chrono::prelude::*;
 use diesel::prelude::*;
-use rocket::http::Status;
-use rocket::request::{FromRequest, Outcome, Request};
+use rocket::{
+    http::Status,
+    request::{FromRequest, Outcome, Request},
+    State,
+};
 
 type DT = DateTime<Utc>;
 
@@ -34,7 +36,8 @@ impl<'a, 'r> FromRequest<'a, 'r> for User {
             None => return Outcome::Failure((Status::Unauthorized, Error::NoLoginToken)),
         };
 
-        let secret = "asd";
+        let config = request.guard::<State<Config>>().expect("Config not found.");
+        let secret = &config.jwt_secret;
 
         // parse token
         let jwt = match JWT::from_token(token, &secret) {
@@ -47,10 +50,17 @@ impl<'a, 'r> FromRequest<'a, 'r> for User {
             .guard::<PgConn>()
             .expect("Failed to get DB connection");
 
-        let user_result = users.filter(id.eq(user_id)).get_result::<User>(&*con);
+        let user_result = users
+            .filter(id.eq(user_id))
+            .get_result::<User>(&*con)
+            .optional();
         let user = match user_result {
             Ok(user) => user,
             Err(e) => return Outcome::Failure((Status::Unauthorized, Error::Database(e))),
+        };
+        let user = match user {
+            Some(user) => user,
+            None => return Outcome::Failure((Status::Unauthorized, Error::UserNotFound)),
         };
 
         Outcome::Success(user)
