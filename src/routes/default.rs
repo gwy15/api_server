@@ -1,6 +1,5 @@
 use rocket::Request;
 use rocket_contrib::json::Json;
-use serde_derive::Serialize;
 
 use crate::errors::ErrorResponse;
 
