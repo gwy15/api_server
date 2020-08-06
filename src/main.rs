@@ -10,6 +10,9 @@ embed_migrations!();
 fn main() {
     dotenv::dotenv().ok();
 
+    // gwy15::init_logger();
+
+    // build rocket
     let rocket = rocket::ignite()
         .attach(gwy15::PgConn::fairing())
         .mount("/hello", routes![gwy15::routes::index::index])
@@ -23,5 +26,6 @@ fn main() {
         .expect("migration failed.");
     log::info!("Database migration finished.");
 
+    // launch rocket
     rocket.launch();
 }

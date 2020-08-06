@@ -1,4 +1,3 @@
-use diesel::pg::PgConnection;
 use diesel::prelude::*;
 
 use crate::PgConn;
