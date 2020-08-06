@@ -16,7 +16,7 @@ jobs:
       run: |
         rustup toolchain add nightly
         rustup override set nightly
-    - name: Build
-      run: cargo build --verbose --release
     - name: Run tests
-      run: cargo test --verbose
+      run: |
+        cargo check --verbose
+        cargo test --verbose
