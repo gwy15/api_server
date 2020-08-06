@@ -5,14 +5,17 @@ extern crate diesel;
 extern crate rocket;
 #[macro_use]
 extern crate serde_derive;
+#[macro_use]
+extern crate thiserror;
 
-pub mod models;
 pub mod schema;
 
 pub mod errors;
+pub use errors::{Error, Result};
 pub mod routes;
 
 pub mod account;
+pub use account::User;
 
 #[rocket_contrib::database("pg_db")]
 pub struct PgConn(diesel::PgConnection);

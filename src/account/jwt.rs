@@ -41,6 +41,10 @@ impl JWT {
         )
         .map(|data| data.claims)
     }
+
+    pub fn user_id(&self) -> i32 {
+        self.sub
+    }
 }
 
 #[cfg(test)]

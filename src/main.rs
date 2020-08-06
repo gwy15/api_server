@@ -12,11 +12,17 @@ fn main() {
 
     // gwy15::init_logger();
 
+    let routes = routes![gwy15::routes::index::index, gwy15::routes::index::user];
+    let catchers = catchers![
+        gwy15::routes::catchers::not_found,
+        gwy15::routes::catchers::unauthorized
+    ];
+
     // build rocket
     let rocket = rocket::ignite()
         .attach(gwy15::PgConn::fairing())
-        .mount("/hello", routes![gwy15::routes::index::index])
-        .register(catchers![gwy15::routes::default::not_found]);
+        .mount("/hello", routes)
+        .register(catchers);
 
     // Run db migrations
     let db_con =

@@ -1,2 +1,2 @@
-pub mod default;
+pub mod catchers;
 pub mod index;
