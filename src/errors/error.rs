@@ -1,12 +1,11 @@
-use super::ErrMsg;
+use super::ErrorResponse;
 use crate::account::Error as AccountError;
 use config::ConfigError;
 use diesel::result::Error as DBError;
 use rocket::{
     http::Status,
     request::Request,
-    response,
-    response::{content, Responder, Response},
+    response::{content, Responder, Response, Result as ResponseResult},
 };
 use serde_json;
 
@@ -22,8 +21,19 @@ pub enum Error {
     Database(#[from] DBError),
 }
 
+impl Error {
+    fn to_error_response(&self, detailed: bool) -> ErrorResponse<String> {
+        let detail = if detailed { unimplemented!() } else { None };
+        // TODO: add detail under dev
+        ErrorResponse {
+            errmsg: self.to_string(),
+            detail,
+        }
+    }
+}
+
 impl<'r> Responder<'r> for Error {
-    fn respond_to(self, request: &Request) -> response::Result<'r> {
+    fn respond_to(self, request: &Request) -> ResponseResult<'r> {
         use Error::*;
         let status = match &self {
             Config(_) => Status::InternalServerError,
@@ -31,10 +41,9 @@ impl<'r> Responder<'r> for Error {
             Authorization(_) => Status::Unauthorized,
         };
 
-        let errmsg = self.to_string();
-        let body = serde_json::to_string(&ErrMsg::new(errmsg)).unwrap();
+        let error_response = self.to_error_response(false);
+        let body = serde_json::to_string(&error_response).unwrap();
         let response = content::Json(body).respond_to(request).unwrap();
-        // TODO: add detail under dev
         Response::build_from(response).status(status).ok()
     }
 }
