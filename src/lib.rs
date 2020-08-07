@@ -1,4 +1,5 @@
 #![feature(proc_macro_hygiene, decl_macro)]
+
 #[macro_use]
 extern crate diesel;
 #[macro_use]
@@ -7,6 +8,8 @@ extern crate rocket;
 extern crate serde_derive;
 #[macro_use]
 extern crate thiserror;
+#[macro_use]
+extern crate lazy_static;
 
 pub mod schema;
 

@@ -1,7 +1,9 @@
 {
     "cSpell.words": [
+        "Insertable",
         "chrono",
         "errmsg",
-        "jsonwebtoken"
+        "jsonwebtoken",
+        "passlib"
     ]
 }

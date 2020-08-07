@@ -14,6 +14,14 @@ pub fn index(conn: PgConn) -> &'static str {
         .expect("error loading");
     log::info!("users: {:?}", results);
 
+    // test
+    use crate::account::NewUser;
+    let _u = NewUser {
+        username: "name".into(),
+        password: "password".into(),
+    };
+    // u.insert(&conn);
+
     "Hello, world!"
 }
 
