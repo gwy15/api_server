@@ -1,13 +1,9 @@
+mod msg;
+pub use msg::{ErrMsg, ErrorResponse};
+
 use crate::account::Error as AccountError;
 use config::ConfigError;
 use diesel::result::Error as DError;
-
-// returned error message
-#[derive(Serialize)]
-pub struct ErrorResponse<D> {
-    pub errmsg: String,
-    pub detail: Option<D>,
-}
 
 #[derive(Error, Debug)]
 pub enum Error {

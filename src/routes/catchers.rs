@@ -1,23 +1,17 @@
 use rocket::Request;
 use rocket_contrib::json::Json;
 
-use crate::errors::ErrorResponse;
+use crate::errors::ErrMsg;
 
 #[catch(404)]
-pub fn not_found(req: &Request) -> Json<ErrorResponse<()>> {
+pub fn not_found(req: &Request) -> Json<ErrMsg> {
     let uri = req.uri().to_string();
     // TODO: i18n
-    Json(ErrorResponse {
-        errmsg: format!(r#"Uri "{}" was not found."#, uri),
-        detail: None,
-    })
+    Json(ErrMsg::new(format!(r#"Uri "{}" was not found."#, uri)))
 }
 
 #[catch(401)]
-pub fn unauthorized(_req: &Request) -> Json<ErrorResponse<()>> {
+pub fn unauthorized(_req: &Request) -> Json<ErrMsg> {
     // TODO: i18n
-    Json(ErrorResponse {
-        errmsg: "Unauthorized".into(),
-        detail: None,
-    })
+    Json(ErrMsg::new("Unauthorized"))
 }
