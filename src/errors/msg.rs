@@ -5,7 +5,7 @@ pub struct ErrorResponse<D> {
     pub detail: Option<D>,
 }
 
-pub type ErrMsg = ErrorResponse<()>;
+pub type ErrMsg = ErrorResponse<String>;
 
 impl ErrMsg {
     pub fn new<T>(errmsg: T) -> Self

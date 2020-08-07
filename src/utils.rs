@@ -1,5 +1,3 @@
-use rocket::{http::Status, request::Outcome};
-
 /// result to outcome
 #[macro_export]
 macro_rules! result_to_outcome {

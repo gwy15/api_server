@@ -18,12 +18,13 @@ pub fn index(conn: PgConn) -> &'static str {
 }
 
 #[get("/user")]
-pub fn user(user: Result<User>) -> String {
+pub fn user(user: Result<User>) -> Result<String> {
     match user {
         Err(e) => {
             eprintln!("error: {:?}", e);
-            format!("failed: {:?}", e)
+            format!("failed: {:?}", e);
+            Err(e)
         }
-        Ok(user) => format!("Hi! {}", user.username),
+        Ok(user) => Ok(format!("Hi! {}", user.username)),
     }
 }
