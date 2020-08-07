@@ -1,1 +1,2 @@
 jwt_secret = "WI1fDkCd9smkl8wFJpMum6dHgbX6nmlwfl9hFoaPWP0="
+jwt_duration = 604800 # 7 days

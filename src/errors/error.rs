@@ -19,6 +19,12 @@ pub enum Error {
 
     #[error("Database error: {}", .0)]
     Database(#[from] DBError),
+
+    #[error("Form error: {:?}", .0)]
+    Form(String),
+
+    #[error("Error: {}", .0)]
+    Other(String),
 }
 
 impl Error {
@@ -39,11 +45,31 @@ impl<'r> Responder<'r> for Error {
             Config(_) => Status::InternalServerError,
             Database(_) => Status::InternalServerError,
             Authorization(_) => Status::Unauthorized,
+            Form(_) => Status::BadRequest,
+            Other(_) => Status::BadRequest,
         };
 
         let error_response = self.to_error_response(false);
         let body = serde_json::to_string(&error_response).unwrap();
         let response = content::Json(body).respond_to(request).unwrap();
         Response::build_from(response).status(status).ok()
+    }
+}
+
+use rocket::request::FormError;
+use rocket::request::{FormDataError, FormParseError};
+
+impl<'f> From<FormError<'f>> for Error {
+    fn from(e: FormError) -> Self {
+        let s = match e {
+            FormDataError::Io(e) => e.to_string(),
+            FormDataError::Malformed(_) => "The form was corrupted.".into(),
+            FormDataError::Parse(e, _) => match e {
+                FormParseError::BadValue(key, _) => format!("Bad form key: \"{}\"", key),
+                FormParseError::Unknown(key, _val) => format!("Unknown form key \"{}\"", key),
+                FormParseError::Missing(key) => format!("The key \"{}\" was missing.", key),
+            },
+        };
+        Error::Form(s.into())
     }
 }

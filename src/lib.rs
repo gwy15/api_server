@@ -27,6 +27,13 @@ pub mod routes;
 pub mod account;
 pub use account::User;
 
+// type aliases
+mod types {
+    use rocket::request::{Form as RForm, FormError};
+    pub type Form<'r, T> = std::result::Result<RForm<T>, FormError<'r>>;
+}
+pub use types::Form;
+
 #[rocket_contrib::database("pg_db")]
 pub struct PgConn(diesel::PgConnection);
 

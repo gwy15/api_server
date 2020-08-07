@@ -21,7 +21,7 @@ lazy_static! {
 
 const PSWD_LENGTH: usize = digest::SHA256_OUTPUT_LEN;
 
-#[derive(Queryable, Debug)]
+#[derive(Queryable, Identifiable, Debug)]
 pub struct User {
     /// user id
     pub id: i32,
@@ -96,24 +96,24 @@ impl<'a, 'r> FromRequest<'a, 'r> for User {
 
 impl User {
     /// Create a new user and insert into database
-    pub fn new(username: String, password: String, conn: PgConn) -> Result<Self> {
+    pub fn new(username: String, password: String, conn: &PgConn) -> Result<Self> {
         // hash
         let password = hash::hash(&password);
         let new_user = NewUser { username, password };
 
         let user = diesel::insert_into(users::table)
             .values(&new_user)
-            .get_result(&*conn)?;
+            .get_result(&**conn)?;
 
         Ok(user)
     }
 
-    /// Retrieve a user from database with given username and password if matched.
-    pub fn from(username: String, password: String, conn: PgConn) -> Result<Self> {
+    /// Retrieve a valid user from database with given username and password if matched.
+    pub fn from(username: &str, password: &str, conn: &PgConn) -> Result<Self> {
         let user = users::table
             .filter(users::username.eq(username))
             .limit(1)
-            .get_result::<User>(&*conn)
+            .get_result::<User>(&**conn)
             .optional()?;
         let user = match user {
             Some(user) => user,
@@ -124,7 +124,16 @@ impl User {
             return Err(AccountError::UsernameNotFoundOrPasswordNotMatched.into());
         }
 
+        if user.is_disabled {
+            return Err(AccountError::Banned.into());
+        }
+
         Ok(user)
+    }
+
+    /// generate new JWT token
+    pub fn generate_token(&self, duration: i64, secret: &str) -> String {
+        JWT::new(self.id, duration).to_token(secret).unwrap()
     }
 }
 

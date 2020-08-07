@@ -4,6 +4,7 @@ use std::env;
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Config {
     pub jwt_secret: String,
+    pub jwt_duration: i64,
 }
 
 impl Config {

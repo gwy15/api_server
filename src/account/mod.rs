@@ -6,3 +6,5 @@ pub use models::{NewUser, User};
 
 mod errors;
 pub use errors::Error;
+
+pub mod routes;

@@ -25,7 +25,7 @@ impl JWT {
         }
     }
 
-    pub fn encode(&self, secret: &str) -> JWTResult<String> {
+    pub fn to_token(&self, secret: &str) -> JWTResult<String> {
         encode(
             &Header::new(Algorithm::HS256),
             &self,
@@ -62,7 +62,7 @@ mod test {
 
         // encode
         let secret = "Jz86qAemE7w9SiWj2Nda66+xTN0GFCNJZoPVp5fg/P8=";
-        let encoded = jwt.encode(&secret);
+        let encoded = jwt.to_token(&secret);
         assert!(encoded.is_ok());
         let token = encoded.unwrap();
         // decode
@@ -76,7 +76,7 @@ mod test {
         // validate exp
         let mut jwt = JWT::new(1, 10);
         jwt.exp = now - 10;
-        let token = jwt.encode(&secret).unwrap();
+        let token = jwt.to_token(&secret).unwrap();
         assert!(JWT::from_token(&token[1..], &secret).is_err());
     }
 }

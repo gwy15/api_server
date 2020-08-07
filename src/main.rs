@@ -16,10 +16,14 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     // gwy15::init_logger();
 
-    let routes = routes![gwy15::routes::index::index, gwy15::routes::index::user];
+    let routes = routes![
+        gwy15::routes::index::index,
+        gwy15::routes::index::user,
+        gwy15::account::routes::login,
+    ];
     let catchers = catchers![
         gwy15::routes::catchers::not_found,
-        gwy15::routes::catchers::unauthorized
+        gwy15::routes::catchers::unauthorized,
     ];
 
     // build rocket
