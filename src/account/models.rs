@@ -1,6 +1,6 @@
-use crate::schema::users;
 use crate::{
     account::{Error as AccountError, JWT},
+    schema::users,
     Config, Error, PgConn, Result,
 };
 use chrono::prelude::*;
@@ -35,6 +35,14 @@ pub struct User {
     pub token_valid_after: DateTime<Utc>,
     pub created_at: DateTime<Utc>,
     pub updated_at: DateTime<Utc>,
+}
+
+#[derive(Debug, Insertable)]
+#[table_name = "users"]
+pub struct NewUser {
+    pub username: String,
+    /// raw password (not encrypted)
+    pub password: String,
 }
 
 /// Parse user from request header
@@ -72,7 +80,7 @@ impl<'a, 'r> FromRequest<'a, 'r> for User {
         // error: DB query failed
         let user = result_to_outcome! { user_result => (Unauthorized, Error::Database) };
         // error: no such user
-        let user = option_to_outcome! { user => (Unauthorized, AccountError::UserNotFound) };
+        let user = option_to_outcome! { user => (Unauthorized, AccountError::UserIDNotFound) };
         // error: user token expired
         if jwt.issued_at() < user.token_valid_after.timestamp() {
             return Outcome::Failure((Status::Unauthorized, AccountError::TokenExpired.into()));
@@ -86,12 +94,38 @@ impl<'a, 'r> FromRequest<'a, 'r> for User {
     }
 }
 
-#[derive(Debug, Insertable)]
-#[table_name = "users"]
-pub struct NewUser {
-    pub username: String,
-    /// raw password (not encrypted)
-    pub password: String,
+impl User {
+    /// Create a new user and insert into database
+    pub fn new(username: String, password: String, conn: PgConn) -> Result<Self> {
+        // hash
+        let password = hash::hash(&password);
+        let new_user = NewUser { username, password };
+
+        let user = diesel::insert_into(users::table)
+            .values(&new_user)
+            .get_result(&*conn)?;
+
+        Ok(user)
+    }
+
+    /// Retrieve a user from database with given username and password if matched.
+    pub fn from(username: String, password: String, conn: PgConn) -> Result<Self> {
+        let user = users::table
+            .filter(users::username.eq(username))
+            .limit(1)
+            .get_result::<User>(&*conn)
+            .optional()?;
+        let user = match user {
+            Some(user) => user,
+            None => return Err(AccountError::UsernameNotFoundOrPasswordNotMatched.into()),
+        };
+
+        if !hash::verify(&password, &user.password) {
+            return Err(AccountError::UsernameNotFoundOrPasswordNotMatched.into());
+        }
+
+        Ok(user)
+    }
 }
 
 #[allow(unused)]
