@@ -1,4 +1,7 @@
-use crate::{account::JWT, Config, Error, PgConn};
+use crate::{
+    account::{Error as AccountError, JWT},
+    Config, Error, PgConn,
+};
 use chrono::prelude::*;
 use diesel::prelude::*;
 use rocket::{
@@ -29,39 +32,42 @@ impl<'a, 'r> FromRequest<'a, 'r> for User {
 
         log::debug!("Parsing user...");
 
-        // if missing token, return 401 Unauthorized
-        let token_result = request.headers().get("Authorization").next();
-        let token = match token_result {
-            Some(token) => token,
-            None => return Outcome::Failure((Status::Unauthorized, Error::NoLoginToken)),
+        // error: if missing token, return 401 Unauthorized
+        let token = option_to_outcome! {
+            request.headers().get("Authorization").next()
+            => (Unauthorized, AccountError::NoLoginToken)
         };
 
+        // verify JWT token
         let config = request.guard::<State<Config>>().expect("Config not found.");
         let secret = &config.jwt_secret;
-
-        // parse token
-        let jwt = match JWT::from_token(token, &secret) {
-            Ok(jwt) => jwt,
-            Err(e) => return Outcome::Failure((Status::Unauthorized, Error::BadLoginToken(e))),
+        // error: jwt verification failed
+        let jwt = result_to_outcome! {
+            JWT::from_token(token, &secret) => (Unauthorized, AccountError::BadLoginToken)
         };
-        let user_id = jwt.user_id();
 
+        // get user
+        let user_id = jwt.user_id();
         let con = request
             .guard::<PgConn>()
             .expect("Failed to get DB connection");
-
         let user_result = users
             .filter(id.eq(user_id))
             .get_result::<User>(&*con)
             .optional();
-        let user = match user_result {
-            Ok(user) => user,
-            Err(e) => return Outcome::Failure((Status::Unauthorized, Error::Database(e))),
-        };
-        let user = match user {
-            Some(user) => user,
-            None => return Outcome::Failure((Status::Unauthorized, Error::UserNotFound)),
-        };
+
+        // error: DB query failed
+        let user = result_to_outcome! { user_result => (Unauthorized, Error::Database) };
+        // error: no such user
+        let user = option_to_outcome! { user => (Unauthorized, AccountError::UserNotFound) };
+        // error: user token expired
+        if jwt.issued_at() < user.token_valid_after.timestamp() {
+            return Outcome::Failure((Status::Unauthorized, AccountError::TokenExpired.into()));
+        }
+        // error: user banned
+        if user.is_disabled {
+            return Outcome::Failure((Status::Unauthorized, AccountError::Banned.into()));
+        }
 
         Outcome::Success(user)
     }

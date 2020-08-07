@@ -16,6 +16,9 @@ pub use errors::{Error, Result};
 mod config;
 pub use crate::config::Config;
 
+#[macro_use]
+pub mod utils;
+
 pub mod routes;
 
 pub mod account;

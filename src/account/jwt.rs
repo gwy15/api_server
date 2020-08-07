@@ -45,6 +45,10 @@ impl JWT {
     pub fn user_id(&self) -> i32 {
         self.sub
     }
+
+    pub fn issued_at(&self) -> i64 {
+        self.iat
+    }
 }
 
 #[cfg(test)]
