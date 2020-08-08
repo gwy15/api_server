@@ -1,7 +1,7 @@
 -- Your SQL goes here
 CREATE TABLE "users" (
     id SERIAL PRIMARY KEY,
-    username VARCHAR(64) NOT NULL,
+    username VARCHAR(64) NOT NULL UNIQUE,
     password VARCHAR(512) NOT NULL,
     is_admin BOOLEAN NOT NULL DEFAULT false,
     is_disabled BOOLEAN NOT NULL DEFAULT false,

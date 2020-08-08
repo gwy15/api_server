@@ -21,6 +21,7 @@ lazy_static! {
 
 const PSWD_LENGTH: usize = digest::SHA256_OUTPUT_LEN;
 
+/// The user class for application.
 #[derive(Queryable, Identifiable, Debug)]
 pub struct User {
     /// user id
@@ -37,6 +38,7 @@ pub struct User {
     pub updated_at: DateTime<Utc>,
 }
 
+/// Insertable new user
 #[derive(Debug, Insertable)]
 #[table_name = "users"]
 pub struct NewUser {
@@ -180,6 +182,7 @@ mod hash {
         Some((round, salt, checksum))
     }
 
+    /// Verify secret against previously generated hash
     pub fn verify(secret: &str, hash: &str) -> bool {
         parse_hash(hash)
             .and_then(|(rounds, salt, previously_derived)| {
