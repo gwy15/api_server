@@ -10,6 +10,11 @@ extern crate serde_derive;
 extern crate thiserror;
 #[macro_use]
 extern crate lazy_static;
+#[macro_use]
+extern crate diesel_migrations;
+
+// make diesel migration module
+embed_migrations!();
 
 pub mod schema;
 
@@ -37,7 +42,39 @@ pub use types::Form;
 #[rocket_contrib::database("pg_db")]
 pub struct PgConn(diesel::PgConnection);
 
+/// initialize logging
 pub fn init_logger() {
     log4rs::init_file("log4rs.yml", Default::default()).unwrap();
     log::info!("logging initialized");
+}
+
+/// Create a rocket instance that represents the application
+pub fn new_rocket() -> Result<rocket::Rocket> {
+    dotenv::dotenv().ok();
+
+    let config = Config::new()?;
+
+    // init_logger();
+
+    let routes = routes![
+        routes::index::index,
+        routes::index::user,
+        account::routes::login,
+    ];
+    let catchers = catchers![routes::catchers::not_found, routes::catchers::unauthorized,];
+
+    // build rocket
+    let rocket = rocket::ignite()
+        .manage(config)
+        .attach(PgConn::fairing())
+        .mount("/hello", routes)
+        .register(catchers);
+
+    // Run db migrations
+    let db_con = PgConn::get_one(&rocket).expect("Failed to get a db connection for migration.");
+    // embedded_migrations::run(&connection);
+    embedded_migrations::run_with_output(&*db_con, &mut std::io::stdout())
+        .expect("migration failed.");
+    log::info!("Database migration finished.");
+    Ok(rocket)
 }
