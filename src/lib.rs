@@ -58,14 +58,13 @@ pub fn new_rocket() -> Result<rocket::Rocket> {
 
     // init_logger();
 
-    let routes = routes![account::routes::login, account::routes::register,];
     let catchers = catchers![routes::catchers::not_found, routes::catchers::unauthorized,];
 
     // build rocket
     let rocket = rocket::ignite()
         .manage(config)
         .attach(PgConn::fairing())
-        .mount("/", routes)
+        .mount("/account", account::routes())
         .register(catchers);
 
     Ok(rocket)

@@ -75,7 +75,7 @@ mod test {
         let user = User::new("test_account".into(), "password".into(), &conn).unwrap();
         let request = |s| {
             client
-                .post("/login")
+                .post("/account/login")
                 .header(ContentType::Form)
                 .body(s)
                 .dispatch()
@@ -110,7 +110,7 @@ mod test {
         //
         let request = |s| {
             client
-                .post("/register")
+                .post("/account/register")
                 .header(ContentType::Form)
                 .body(s)
                 .dispatch()

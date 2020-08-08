@@ -7,4 +7,8 @@ pub use models::{NewUser, User};
 mod errors;
 pub use errors::Error;
 
-pub mod routes;
+mod routes;
+
+pub fn routes() -> Vec<rocket::Route> {
+    routes![routes::login, routes::register,]
+}
