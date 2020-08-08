@@ -1,0 +1,11 @@
+[global]
+keep_alive = 10
+
+[staging]
+address = "127.0.0.1"
+port = 80
+workers = 4
+log = "normal"
+[staging.databases.pg_db]
+url = "postgres://postgres:github_ci_postgres_password@localhost/test"
+pool_size = 4

@@ -1,5 +1,5 @@
-// returned error message
-#[derive(Serialize)]
+/// returned error message
+#[derive(Debug, Serialize, Deserialize)]
 pub struct ErrorResponse<D> {
     pub errmsg: String,
     pub detail: Option<D>,

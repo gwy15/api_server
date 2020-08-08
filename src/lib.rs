@@ -27,6 +27,8 @@ pub use crate::config::Config;
 #[macro_use]
 pub mod utils;
 
+pub mod test;
+
 pub mod routes;
 
 pub mod account;
@@ -59,7 +61,7 @@ pub fn new_rocket() -> Result<rocket::Rocket> {
     let routes = routes![
         routes::index::index,
         routes::index::user,
-        account::routes::login,
+        account::routes::login::login,
     ];
     let catchers = catchers![routes::catchers::not_found, routes::catchers::unauthorized,];
 
@@ -67,14 +69,15 @@ pub fn new_rocket() -> Result<rocket::Rocket> {
     let rocket = rocket::ignite()
         .manage(config)
         .attach(PgConn::fairing())
-        .mount("/hello", routes)
+        .mount("/", routes)
         .register(catchers);
 
-    // Run db migrations
-    let db_con = PgConn::get_one(&rocket).expect("Failed to get a db connection for migration.");
+    Ok(rocket)
+}
+
+pub fn run_migration(db_con: &diesel::PgConnection) {
     // embedded_migrations::run(&connection);
-    embedded_migrations::run_with_output(&*db_con, &mut std::io::stdout())
+    embedded_migrations::run_with_output(db_con, &mut std::io::stdout())
         .expect("migration failed.");
     log::info!("Database migration finished.");
-    Ok(rocket)
 }
