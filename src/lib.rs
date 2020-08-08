@@ -58,12 +58,7 @@ pub fn new_rocket() -> Result<rocket::Rocket> {
 
     // init_logger();
 
-    let routes = routes![
-        routes::index::index,
-        routes::index::user,
-        account::routes::login,
-        account::routes::register,
-    ];
+    let routes = routes![account::routes::login, account::routes::register,];
     let catchers = catchers![routes::catchers::not_found, routes::catchers::unauthorized,];
 
     // build rocket
