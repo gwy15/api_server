@@ -4,6 +4,7 @@
         "chrono",
         "errmsg",
         "jsonwebtoken",
-        "passlib"
+        "passlib",
+        "zxcvbn"
     ]
 }

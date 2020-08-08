@@ -41,10 +41,10 @@ impl Error {
 impl<'r> Responder<'r> for Error {
     fn respond_to(self, request: &Request) -> ResponseResult<'r> {
         use Error::*;
-        let status = match &self {
+        let status = match self {
             Config(_) => Status::InternalServerError,
             Database(_) => Status::InternalServerError,
-            Authorization(_) => Status::Unauthorized,
+            Authorization(e) => return e.respond_to(request),
             Form(_) => Status::BadRequest,
             Other(_) => Status::BadRequest,
         };

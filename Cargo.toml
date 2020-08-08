@@ -33,3 +33,4 @@ jsonwebtoken = "7.2.0"
 ring = "0.16.15"
 rand = "0.7.3"
 base64 = "0.12.3"
+zxcvbn = "2.0.1" # password length check

@@ -1,4 +1,5 @@
-use crate::{schema::users, Config, Form, PgConn, Result, User};
+use super::Error as AccountError;
+use crate::{schema::users, Config, Error, Form, PgConn, Result, User};
 use chrono::Utc;
 use diesel::prelude::*;
 use rocket::State;
@@ -51,7 +52,14 @@ pub fn register(
     config: State<Config>,
 ) -> Result<Json<TokenInfo>> {
     let form = form?.into_inner();
-    // todo: verify username and password complexity
+    // verify username and password complexity
+    use zxcvbn::zxcvbn;
+    let entropy =
+        zxcvbn(&form.password, &[&form.username]).map_err(|_| AccountError::PasswordTooWeak)?;
+    if entropy.score() < 3 {
+        return Err(Error::Authorization(AccountError::PasswordTooWeak));
+    }
+
     //
     let user = User::new(form.username, form.password, &conn)?;
     //
@@ -100,7 +108,7 @@ mod test {
             .execute(&*conn)
             .unwrap();
         let resp = request("username=test_account&password=password");
-        assert_eq!(resp.status(), Status::Unauthorized);
+        assert_eq!(resp.status(), Status::Forbidden);
     }
 
     #[test]
@@ -116,15 +124,24 @@ mod test {
                 .dispatch()
         };
         // normal register
-        let resp = request("username=test_account&password=pswd");
+        let resp = request("username=test_account&password=longC0mplex_p5wd");
         assert_eq!(resp.status(), Status::Ok);
         // username occupied
-        let resp = request("username=test_account&password=pswd");
-        assert_eq!(resp.status(), Status::Unauthorized);
+        let resp = request("username=test_account&password=longC0mplex_p5wd");
+        assert_eq!(resp.status(), Status::BadRequest);
         let errmsg = errmsg_from(resp);
-        assert_eq!(
-            errmsg.errmsg,
-            r#"Authorization failed: Username "test_account" occupied"#
-        );
+        assert_eq!(errmsg.errmsg, r#"Username "test_account" occupied"#);
+        // weak password
+        for pswd in &["", "pswd", "123", "test_account_p5wd"] {
+            let body = format!("username=test_account&password={}", pswd);
+            let resp = client
+                .post("/account/register")
+                .header(ContentType::Form)
+                .body(&body)
+                .dispatch();
+            assert_eq!(resp.status(), Status::BadRequest);
+            let errmsg = errmsg_from(resp);
+            assert_eq!(errmsg.errmsg, r#"Password too weak"#);
+        }
     }
 }
