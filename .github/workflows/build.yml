@@ -29,7 +29,7 @@ jobs:
       run: cp config/Rocket.ci.toml ./Rocket.toml
     - name: Run tests
       env:
-        ROCKET_ENV:stage
+        ROCKET_ENV: stage
       run: |
         cargo check --verbose
         cargo test --verbose
