@@ -99,13 +99,27 @@ impl<'a, 'r> FromRequest<'a, 'r> for User {
 impl User {
     /// Create a new user and insert into database
     pub fn new(username: String, password: String, conn: &PgConn) -> Result<Self> {
+        use diesel::result::{DatabaseErrorKind::UniqueViolation, Error::DatabaseError};
         // hash
         let password = hash::hash(&password);
-        let new_user = NewUser { username, password };
+        let new_user = NewUser {
+            username: username.clone(),
+            password,
+        };
 
         let user = diesel::insert_into(users::table)
             .values(&new_user)
-            .get_result(&**conn)?;
+            .get_result(&**conn)
+            .map_err(|e| match e {
+                DatabaseError(UniqueViolation, _) => {
+                    log::info!("username occupied");
+                    Error::Authorization(AccountError::UsernameOccupied(username))
+                }
+                _ => {
+                    log::warn!("Create user failed: {}", e);
+                    Error::Database(e)
+                }
+            })?;
 
         Ok(user)
     }

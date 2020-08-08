@@ -32,4 +32,4 @@ jobs:
         ROCKET_ENV: stage
       run: |
         cargo check --verbose
-        cargo test --verbose
+        cargo test --verbose -- --test-threads 1

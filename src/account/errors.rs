@@ -20,4 +20,7 @@ pub enum Error {
 
     #[error("Username not found or password not matched.")]
     UsernameNotFoundOrPasswordNotMatched,
+
+    #[error("Username \"{}\" occupied", .0)]
+    UsernameOccupied(String),
 }
