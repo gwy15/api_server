@@ -10,13 +10,26 @@ jobs:
 
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:12-alpine
+        env:
+          POSTGRES_PASSWORD: github_ci_postgres_password
+          POSTGRES_DB: test
+        ports:
+        - 5432:5432
+
     steps:
     - uses: actions/checkout@v2
     - name: Setup toolchain (nightly)
       run: |
         rustup toolchain add nightly
         rustup override set nightly
+    - name: Make Rocket.toml
+      run: cp config/Rocket.ci.toml ./Rocket.toml
     - name: Run tests
+      env:
+        ROCKET_ENV:stage
       run: |
         cargo check --verbose
         cargo test --verbose

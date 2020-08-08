@@ -10,13 +10,12 @@ pub mod prelude {
     pub fn test_rocket() -> rocket::Rocket {
         let rocket = crate::new_rocket().unwrap();
         let conn = PgConn::get_one(&rocket).unwrap();
+        // migration
+        crate::run_migration(&*conn);
         // clean database
         diesel::delete(schema::users::table)
             .execute(&*conn)
             .unwrap();
-        // migration
-        crate::run_migration(&*conn);
-        //
         rocket
     }
 }
